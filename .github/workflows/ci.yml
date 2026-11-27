@@ -1,0 +1,76 @@
+name: Check, build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Content checks, tests, builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Content checks (schema, stale translations, TODO-VERIFY report, reading level)
+        run: npm run check:content
+      - name: Unit tests
+        run: npm test
+
+      - name: Install browser for smoke tests
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Preview build (drafts + TODO-VERIFY visible)
+        run: npm run build:preview
+      - name: Smoke test, preview
+        run: npm run test:e2e:preview
+
+      - name: Production build (only reviewed content)
+        run: npm run build
+      - name: Size budget
+        run: npm run check:budget
+      - name: Smoke test, production
+        run: npm run test:e2e
+
+      - name: Save content report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: reports/
+
+      - name: Upload site for GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

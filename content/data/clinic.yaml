@@ -1,0 +1,10 @@
+# REACH clinic facts. Each value needs verified: true before it shows on the public site.
+# While verified is false, the public site shows "Ask clinic staff" instead of the value.
+# When you confirm a value: set verified: true and fill confirmed_by / confirmed_on.
+name: { value: "REACH clinic, Access Alliance", verified: false }
+address: { value: "", verified: false, note: "Street address, entrance, floor" }
+ttc: { value: "", verified: false, note: "Nearest subway/bus stops" }
+phone: { value: "", verified: false, tel: true }
+days_hours: { value: "", verified: false, note: "Clinic days and hours" }
+booking: { value: "Call on Monday mornings to book an appointment.", verified: false }
+interpreter: { value: "Phone interpreters are used. Visits with an interpreter take longer.", verified: false }

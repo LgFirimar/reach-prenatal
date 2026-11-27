@@ -1,0 +1,10 @@
+{
+  "_help": "One entry per language. status: live = on the public site; draft = only in preview builds. slug is the URL part. Adding a language needs no code change.",
+  "languages": [
+    { "code": "en", "slug": "en", "name": "English", "dir": "ltr", "status": "live" },
+    { "code": "es", "slug": "es", "name": "Español", "dir": "ltr", "status": "draft" },
+    { "code": "pt-BR", "slug": "pt-br", "name": "Português (Brasil)", "dir": "ltr", "status": "draft" },
+    { "code": "vi", "slug": "vi", "name": "Tiếng Việt", "dir": "ltr", "status": "draft" },
+    { "code": "ar", "slug": "ar", "name": "العربية", "dir": "rtl", "status": "draft", "note": "Right-to-left layout test only. No translations yet; text falls back to English." }
+  ]
+}
