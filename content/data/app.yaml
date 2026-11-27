@@ -1,0 +1,3 @@
+# App settings (not clinical).
+# Quick exit sends the person to a neutral site and replaces the current history entry.
+quick_exit_url: { value: "https://weather.gc.ca/", verified: true }

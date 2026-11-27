@@ -1,0 +1,42 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { allRoutes } from '../../lib/pages.mjs';
+import { uiStrings, isPreview, sources } from '../../lib/site.mjs';
+
+export async function getStaticPaths() {
+  return (await allRoutes()).map(({ lang, slug, page }) => ({ params: { lang: lang.slug, slug }, props: { lang, page, slug } }));
+}
+const { lang, page, slug } = Astro.props;
+const ui = uiStrings(lang.slug);
+const base = import.meta.env.BASE_URL;
+const { Content } = await render(page.entry);
+const d = page.entry.data;
+const src = sources();
+const contentLang = page.english ? { code: 'en', dir: 'ltr' } : lang;
+const fmt = (date) => date.toISOString().slice(0, 10);
+---
+<Base lang={lang} title={d.title}>
+  {page.status === 'missing' && <p class="banner banner-info">{ui.not_translated}</p>}
+  {page.status === 'stale' && (
+    <p class="banner banner-warn">{ui.stale_translation} <a href={`${base}en/${slug}/`}>{ui.read_english}</a></p>
+  )}
+  {isPreview() && d.needs_clinical_review && <p class="banner banner-draft">{ui.needs_review_banner}</p>}
+  <article class="prose" lang={contentLang.code} dir={contentLang.dir}>
+    <h1>{d.title}</h1>
+    <Content />
+  </article>
+  <aside class="meta">
+    {d.clinical && (
+      <p>
+        {d.last_reviewed_on ? `${ui.last_reviewed}: ${fmt(d.last_reviewed_on)} ${ui.by} ${d.last_reviewed_by}` : ui.not_reviewed}
+      </p>
+    )}
+    {d.sources.length > 0 && (
+      <details>
+        <summary>{ui.sources}</summary>
+        <ul>{d.sources.map((id) => <li><a href={src[id].url} rel="noopener">{src[id].title}</a></li>)}</ul>
+      </details>
+    )}
+  </aside>
+</Base>

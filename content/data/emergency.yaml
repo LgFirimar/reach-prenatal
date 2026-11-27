@@ -1,0 +1,8 @@
+# Emergency and support numbers. verified: false = shown only in preview builds.
+# Proposed values below come from the planning brief or general knowledge and MUST be checked.
+911: { value: "911", verified: true, tel: true }
+crisis_988: { value: "9-8-8", verified: false, tel: true, dial: "988", note: "Suicide Crisis Helpline, call or text" }
+health811: { value: "811", verified: false, tel: true, note: "Health811; check access for uninsured callers" }
+awhl: { value: "1-866-863-0511", verified: false, tel: true, note: "Assaulted Women's Helpline, 24/7" }
+victim_services: { value: "416-808-7066", verified: false, tel: true, note: "Victim Services Toronto" }
+talk4healing: { value: "1-855-554-4325", verified: false, tel: true, note: "Talk4Healing" }

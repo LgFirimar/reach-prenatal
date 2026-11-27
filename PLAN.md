@@ -25,7 +25,7 @@ Decisions already made in Q&A:
 
 | Concern | Choice | Why |
 |---|---|---|
-| Framework | **Astro 5** (static output) | Content-first. Ships **zero JS by default**: most pages are HTML and CSS, which suits low-end Android. Its content collections check frontmatter against a zod schema, which enforces the review fields (`last_reviewed_by`, `needs_clinical_review`, …) at build time. |
+| Framework | **Astro 7** (static output; current major at build time) | Content-first. Ships **zero JS by default**: most pages are HTML and CSS, which suits low-end Android. Its content collections check frontmatter against a zod schema, which enforces the review fields (`last_reviewed_by`, `needs_clinical_review`, …) at build time. |
 | Interactive parts | **Preact islands** (~4 KB) | Only the form, checklist, finder, stepper progress, and the emergency/safety overlay need JS. Preact uses React syntax, so React knowledge transfers. |
 | i18n | Astro i18n routing (`/en/…`, `/es/…`) + a tiny in-house `t()` over JSON UI strings | No runtime i18n library is needed, because pages are pre-rendered per language. Languages come from a registry file, so adding one needs no code change (§3). |
 | PWA | `@vite-pwa/astro` (Workbox) | Precaches the app shell and the **current language only**. Other languages are cached when first visited. |
@@ -71,7 +71,7 @@ Decisions already made in Q&A:
 │   ├── food-safety · activity · common-symptoms · mental-health
 │   └── after-birth
 ├── clinic/             H. Clinic info (address, TTC, days, how to book)
-├── emergency/          G1. Medical help (also an overlay, see below)
+├── help/medical/       G1. Medical help (also an overlay, see below)
 ├── phrase-card         "Show this at the hospital" (English)
 ├── my-data             Clear all data · auto-delete · PIN · saved numbers
 └── about               Disclaimer, sources, last updated
@@ -138,12 +138,12 @@ translated_on: 2026-12-10
 ```
 
 ### Content rules
-- **`TODO-VERIFY`** is written inline as `:::todo[Clinic days and hours]:::` (a remark directive).
+- **`TODO-VERIFY`** is written inline as `:todo[Clinic days and hours]` (a remark directive).
   - **Review/preview build:** shown as a yellow highlighted box.
   - **Production:** rendered as *"Ask clinic staff"* in neutral styling, so a guess is never shown.
   - CI generates `TODO-VERIFY.md`, a running list with the file and line of each item.
 - **`needs_clinical_review: true`**: the page **is not published to production**. It appears only in preview builds, with a banner. This prevents unreviewed clinical text from going live.
-- Data values (numbers, fees, hours) live in `data/*.yaml` and are referenced from the Markdown, e.g. `{clinic.hours}`. When a phone number changes, you edit it once and every language updates.
+- Data values (numbers, fees, hours) live in `data/*.yaml` and are referenced from the Markdown, e.g. `:data[clinic.days_hours]`. When a phone number changes, you edit it once and every language updates.
 
 ### Keeping translations in sync
 - A build script compares each translation's `source_version` with the English `version`:

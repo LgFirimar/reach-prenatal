@@ -1,0 +1,129 @@
+---
+// The "Help now" bar and overlay, on every page.
+// Safety & support has NO URL: it only exists inside this dialog, so opening it
+// adds nothing to browser history and nothing is written to storage.
+import { render } from 'astro:content';
+import { pageFor } from '../lib/pages.mjs';
+import { uiStrings, siteData } from '../lib/site.mjs';
+
+const { lang } = Astro.props;
+const ui = uiStrings(lang.slug);
+const base = import.meta.env.BASE_URL;
+const medical = await pageFor(lang.slug, 'help/medical');
+const safety = await pageFor(lang.slug, 'help/safety');
+const Medical = medical ? (await render(medical.entry)).Content : null;
+const Safety = safety ? (await render(safety.entry)).Content : null;
+const exitUrl = siteData().app.quick_exit_url.value;
+// Without JavaScript the button still works: it goes to the medical page, or dials 911.
+const noJsHref = medical ? `${base}${lang.slug}/help/medical/` : 'tel:911';
+---
+<nav class="help-bar" aria-label={ui.help_now}>
+  <a class="help-btn" href={noJsHref} data-help-open>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2v2Zm0-4h-2V7h2v6Z" fill="currentColor"/></svg>
+    {ui.help_now}
+  </a>
+</nav>
+
+<dialog class="help" id="help" aria-labelledby="help-title" data-exit-url={exitUrl}>
+  <div class="help-head">
+    <button type="button" class="link-btn" data-help-back hidden>‹ {ui.back}</button>
+    <button type="button" class="quick-exit" data-quick-exit hidden>{ui.quick_exit}</button>
+    <button type="button" class="link-btn close" data-help-close>{ui.close} ✕</button>
+  </div>
+
+  <div data-view="choose">
+    <h2 id="help-title">{ui.help_title}</h2>
+    <button type="button" class="choice choice-medical" data-go="medical">
+      <strong>{ui.help_medical}</strong><span>{ui.help_medical_hint}</span>
+    </button>
+    <button type="button" class="choice choice-safety" data-go="safety" data-safety-choice>
+      <strong>{ui.help_safety}</strong><span>{ui.help_safety_hint}</span>
+    </button>
+    <p class="call-911"><a class="btn-911" href="tel:911">{ui.call} 911</a></p>
+  </div>
+
+  <div data-view="medical" hidden>
+    {Medical ? (
+      <article class="prose" lang={medical.english ? 'en' : lang.code} dir={medical.english ? 'ltr' : lang.dir}>
+        <h2>{medical.entry.data.title}</h2>
+        <Medical />
+      </article>
+    ) : (
+      <div class="prose">
+        <p class="big">{ui.emergency_fallback}</p>
+        <p>{ui.emergency_cost_first}</p>
+        <p><a class="btn-911" href="tel:911">{ui.call} 911</a></p>
+      </div>
+    )}
+  </div>
+
+  <div data-view="safety" hidden>
+    <p class="quick-exit-hint">{ui.quick_exit_hint}</p>
+    {Safety ? (
+      <article class="prose" lang={safety.english ? 'en' : lang.code} dir={safety.english ? 'ltr' : lang.dir}>
+        <h2>{safety.entry.data.title}</h2>
+        <Safety />
+      </article>
+    ) : (
+      <div class="prose">
+        <p class="big">{ui.safety_fallback}</p>
+        <p><a class="btn-911" href="tel:911">{ui.call} 911</a></p>
+      </div>
+    )}
+  </div>
+</dialog>
+
+<script>
+  // Plain script (no framework) so the emergency path works on any phone.
+  const dlg = document.getElementById('help') as HTMLDialogElement | null;
+  if (dlg && typeof dlg.showModal === 'function') {
+    const views = dlg.querySelectorAll<HTMLElement>('[data-view]');
+    const back = dlg.querySelector<HTMLElement>('[data-help-back]')!;
+    const exitBtn = dlg.querySelector<HTMLElement>('[data-quick-exit]')!;
+    let current = 'choose';
+
+    const show = (name: string) => {
+      current = name;
+      views.forEach((v) => (v.hidden = v.dataset.view !== name));
+      back.hidden = name === 'choose';
+      exitBtn.hidden = name !== 'safety';
+      dlg.scrollTop = 0;
+    };
+
+    // "Simple help menu" setting hides the Safety & support choice (stored under a neutral name).
+    try {
+      if (localStorage.getItem('ui.compact') === '1') {
+        dlg.querySelector<HTMLElement>('[data-safety-choice]')!.hidden = true;
+      }
+    } catch {}
+
+    const quickExit = () => {
+      // Hide the content first so the app-switcher snapshot doesn't show it,
+      // then replace this history entry so Back doesn't return here.
+      views.forEach((v) => (v.hidden = true));
+      document.title = 'Weather';
+      location.replace(dlg.dataset.exitUrl || 'https://weather.gc.ca/');
+    };
+
+    document.querySelectorAll('[data-help-open]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        show('choose');
+        dlg.showModal();
+      }),
+    );
+    dlg.querySelectorAll<HTMLElement>('[data-go]').forEach((b) => b.addEventListener('click', () => show(b.dataset.go!)));
+    back.addEventListener('click', () => show('choose'));
+    exitBtn.addEventListener('click', quickExit);
+    dlg.querySelector('[data-help-close]')!.addEventListener('click', () => dlg.close());
+    // Esc: in Safety & support it is a quick exit; elsewhere it just closes.
+    dlg.addEventListener('cancel', (e) => {
+      if (current === 'safety') {
+        e.preventDefault();
+        quickExit();
+      }
+    });
+    // Leaving the dialog resets it, so nothing about Safety & support stays on screen.
+    dlg.addEventListener('close', () => show('choose'));
+  }
+</script>

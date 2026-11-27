@@ -1,0 +1,33 @@
+---
+// Language picker. Each language is shown in its own name and script.
+import Base from '../layouts/Base.astro';
+import { enabledLanguages, languageBySlug } from '../lib/site.mjs';
+const langs = enabledLanguages();
+const base = import.meta.env.BASE_URL;
+---
+<Base lang={languageBySlug('en')} noHelp>
+  <h1 class="sr-only">Choose your language</h1>
+  <ul class="lang-list" role="list">
+    {langs.map((l) => (
+      <li>
+        <a href={`${base}${l.slug}/`} lang={l.code} dir={l.dir} data-lang={l.slug}>{l.name}</a>
+      </li>
+    ))}
+  </ul>
+  <p class="emergency-line"><a class="btn-911" href="tel:911">Emergency: 911</a></p>
+  <script>
+    // Remember the choice; on later visits go straight to that language (unless ?choose=1).
+    const KEY = 'ui.lang';
+    try {
+      const saved = localStorage.getItem(KEY);
+      const choosing = new URLSearchParams(location.search).has('choose');
+      const link = saved && document.querySelector<HTMLAnchorElement>(`[data-lang="${CSS.escape(saved)}"]`);
+      if (link && !choosing) location.replace(link.href);
+      document.querySelectorAll<HTMLAnchorElement>('[data-lang]').forEach((a) =>
+        a.addEventListener('click', () => {
+          try { localStorage.setItem(KEY, a.dataset.lang!); } catch {}
+        }),
+      );
+    } catch {}
+  </script>
+</Base>

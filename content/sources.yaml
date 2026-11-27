@@ -1,0 +1,7 @@
+# Shared citation list. Pages refer to these by id in their `sources:` field.
+# url points to the organisation; replace with the exact guideline page when reviewing.
+sogc: { title: "Society of Obstetricians and Gynaecologists of Canada (SOGC)", url: "https://www.sogc.org/" }
+aom: { title: "Association of Ontario Midwives (AOM)", url: "https://www.ontariomidwives.ca/" }
+pho: { title: "Public Health Ontario", url: "https://www.publichealthontario.ca/" }
+naci: { title: "National Advisory Committee on Immunization (NACI), PHAC", url: "https://www.canada.ca/en/public-health/services/immunization/national-advisory-committee-on-immunization-naci.html" }
+health-canada: { title: "Health Canada", url: "https://www.canada.ca/en/health-canada.html" }

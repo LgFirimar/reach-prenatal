@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { enabledLanguages, uiStrings } from '../../lib/site.mjs';
+import { publishedSlugs } from '../../lib/pages.mjs';
+
+export function getStaticPaths() {
+  return enabledLanguages().map((lang) => ({ params: { lang: lang.slug }, props: { lang } }));
+}
+const { lang } = Astro.props;
+const ui = uiStrings(lang.slug);
+const base = import.meta.env.BASE_URL;
+const have = await publishedSlugs(lang.slug);
+
+// Home tiles. A tile appears only when its page is published in this build.
+const tiles = [
+  { slug: 'path', label: ui.tile_path, icon: '🧭' },
+  { slug: 'costs', label: ui.tile_costs, icon: '💲' },
+  { slug: 'prepare/checklist', label: ui.tile_checklist, icon: '🎒' },
+  { slug: 'clinic', label: ui.tile_clinic, icon: '📍' },
+  { slug: 'learn', label: ui.tile_learn, icon: '📖' },
+  { slug: 'about', label: ui.tile_about, icon: 'ℹ️' },
+].filter((t) => have.has(t.slug));
+const contentTiles = tiles.filter((t) => t.slug !== 'about').length;
+---
+<Base lang={lang}>
+  <h1>{ui.tiles_title}</h1>
+  <ul class="tiles" role="list">
+    {tiles.map((t) => (
+      <li><a class="tile" href={`${base}${lang.slug}/${t.slug}/`}><span class="tile-icon" aria-hidden="true">{t.icon}</span>{t.label}</a></li>
+    ))}
+    <li><a class="tile" href={`${base}${lang.slug}/my-data/`}><span class="tile-icon" aria-hidden="true">🔒</span>{ui.tile_my_data}</a></li>
+  </ul>
+  {contentTiles < 3 && <p class="note">{ui.coming_soon}</p>}
+</Base>

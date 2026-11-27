@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import { enabledLanguages, uiStrings } from '../../lib/site.mjs';
+
+export function getStaticPaths() {
+  return enabledLanguages().map((lang) => ({ params: { lang: lang.slug }, props: { lang } }));
+}
+const { lang } = Astro.props;
+const ui = uiStrings(lang.slug);
+---
+<Base lang={lang} title={ui.my_data_title}>
+  <h1>{ui.my_data_title}</h1>
+  <p>{ui.my_data_intro}</p>
+
+  <label class="switch">
+    <input type="checkbox" id="compact" />
+    <span><strong>{ui.compact_menu}</strong><br />{ui.compact_menu_hint}</span>
+  </label>
+
+  <p><button type="button" class="btn btn-danger" id="clear" data-confirm={ui.clear_confirm}>{ui.clear_all}</button></p>
+  <p id="cleared" role="status" hidden>{ui.clear_done}</p>
+
+  <script>
+    const compact = document.getElementById('compact') as HTMLInputElement;
+    try {
+      compact.checked = localStorage.getItem('ui.compact') === '1';
+      compact.addEventListener('change', () => {
+        try { compact.checked ? localStorage.setItem('ui.compact', '1') : localStorage.removeItem('ui.compact'); } catch {}
+      });
+    } catch {}
+
+    const btn = document.getElementById('clear') as HTMLButtonElement;
+    btn.addEventListener('click', async () => {
+      if (!confirm(btn.dataset.confirm)) return;
+      try { localStorage.clear(); } catch {}
+      try { sessionStorage.clear(); } catch {}
+      try {
+        // Delete every IndexedDB database this app made (form answers live there).
+        const dbs = (await indexedDB.databases?.()) ?? [];
+        await Promise.all(dbs.map((d) => d.name && new Promise((r) => { const q = indexedDB.deleteDatabase(d.name!); q.onsuccess = q.onerror = q.onblocked = r; })));
+      } catch {}
+      compact.checked = false;
+      document.getElementById('cleared')!.hidden = false;
+    });
+  </script>
+</Base>
